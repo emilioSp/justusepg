@@ -1,54 +1,98 @@
-# justusepg
-Just use postgres
+# Just Use Postgres
 
-### **Coding Challenge: Implement a Work Queue with PostgreSQL**
+**Why add another dependency when PostgreSQL can be your queue?**
 
-#### **Objective**
-Build a **work queue** using PostgreSQL and Node.js. Your implementation should support multiple producers and consumers, ensuring that each task in the queue is processed exactly once.
+This project demonstrates how ridiculously simple it is to build a **production-ready work queue** using just PostgreSQL.
+
+No Redis, no RabbitMQ, no SQS—just Postgres.
+
+![Descrizione](./justusepg.gif)
+
+## Why did I write this?
+
+Because simplicity is underrated.
+
+You don't need to introduce more moving parts into your architecture when your database can handle it all.
+
+## The Magic: One SQL Query
+
+```sql
+SELECT * FROM tasks 
+WHERE status = 'pending' 
+ORDER BY created_at 
+FOR UPDATE SKIP LOCKED 
+LIMIT 1
+```
+
+That's it. `FOR UPDATE SKIP LOCKED` ensures multiple workers can safely process tasks concurrently without stepping on each other's toes.
+
+It's basic, reliable, and leverages PostgreSQL's robust ACID guarantees.
+
+It's already in your stack, battle-tested, you just have to use it.
+
+## Software components
+
+### 1. DB Schema
+```sql
+CREATE TABLE tasks (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  payload JSONB NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT NOW(),
+  picked_at TIMESTAMP,
+  executed_at TIMESTAMP
+);
+```
+
+### 2. Producer (Add Tasks)
+Continuously adds tasks to the queue.
+
+### 3. Consumers (Process Tasks)
+Workers that process tasks in parallel—all safely thanks to PostgreSQL's locking mechanism.
+
+## Quick Start
+
+```bash
+# Start PostgreSQL
+docker compose up -d
+
+# Run migrations
+npm run migrate
+
+# Let's the party begin
+npm run start
+```
+
+Watch as multiple workers process different tasks simultaneously without any race conditions.
+Each producer is able to fetch one task at a time, process it, and mark it as done.
+A task is never processed more than once.
+A task is never assigned to more than one worker at a time.
+
+## What This Proves
+
+You don't always need specialized queue infrastructure. PostgreSQL is:
+- **Simple** - Already in your stack
+- **Reliable** - Battle-tested ACID guarantees
+- **Performant** - Handles thousands of jobs/second
+- **Cost-effective** - No additional services to pay for
+
+and hey, you don't need to consume a "message" to see its payload! :D (just query the `tasks` table directly!)
+
+## When NOT to Use This
+
+- You need **millions** of messages per second
+- You need **pub/sub** patterns across many many...many services
+- You need **delayed/scheduled** jobs at scale
+
+But for **80% of use cases**? Just use Postgres.
+
+## Tech Stack
+
+- PostgreSQL (with `SKIP LOCKED`)
+- Node.js + TypeScript
+- Knex.js (query builder)
+- Docker Compose
 
 ---
 
-#### **Requirements**
-1. **PostgreSQL Table**:
-   - Create a table `tasks` with the following structure:
-     - `id`: Unique identifier for the task (**Primary Key**).
-     - `payload`: Generic content for the task (use a JSON field).
-     - `status`: Task status (`pending`, `in_progress`, `done`).
-     - `created_at`: Timestamp of task creation.
-     - `picked_at`: Timestamp of when the task was picked up for processing.
-
-2. **Producer**:
-   - Write a **Node.js function** to add new tasks to the `tasks` table with an initial status of `pending`.
-   - Simulate adding 5 tasks with different payloads.
-
-3. **Consumers**:
-   - Implement **2 concurrent worker processes** in Node.js:
-     - Each worker retrieves the next `pending` task and updates its status to `in_progress`.
-     - Simulate the processing of the task with a delay (e.g., 2 seconds).
-     - On successful completion, update the task’s status to `done`.
-
-4. **Queue Status**:
-   - Provide a query to return the queue status, showing:
-     - The number of tasks `pending`.
-     - The number of tasks `in_progress`.
-     - The number of tasks `done`.
-
----
-
-#### **Bonus**
-Make the challenge even more challenging:
-- Handle **failed tasks**: Introduce a `failed` status and simulate failure handling for a task.
-- Make the queue **reactive**: Use PostgreSQL **LISTEN/NOTIFY** to notify workers when new tasks are added, instead of polling.
-
----
-
-#### **Deliverables**
-- A SQL script (`schema.sql`) to create the `tasks` table.
-- A Node.js application:
-  - `producer.js`: To add tasks to the queue.
-  - `consumer.js`: To process tasks in parallel.
-- Instructions on how to run the producer and consumer processes.
-
----
-
-Good luck! Let me know if you need help along the way. 🚀
+**The best queue is the one you don't have to add.** 🚀

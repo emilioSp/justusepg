@@ -1,0 +1,33 @@
+{
+  "name": "justusepg",
+  "version": "1.0.0",
+  "description": "Just use postgres",
+  "homepage": "https://github.com/emilioSp/justusepg#readme",
+  "bugs": {
+    "url": "https://github.com/emilioSp/justusepg/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emilioSp/justusepg.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "new:migration": "knex migrate:make -x ts",
+    "migrate": "knex migrate:latest",
+    "start": "concurrently -n producer,consumer1,consumer2,consumer3,consumer4,consumer5 --prefix-colors white,bgRed,bgGreen,bgYellow,bgBlue,bgMagenta \"node --env-file=.env ./src/producer.ts\" \"node ./src/consumer.ts\" \"node ./src/consumer.ts\" \"node ./src/consumer.ts\" \"node ./src/consumer.ts\" \"node ./src/consumer.ts\"",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "knex": "^3.1.0",
+    "pg": "^8.17.2",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.11",
+    "@types/node": "^25.0.10",
+    "concurrently": "^9.2.1"
+  }
+}
