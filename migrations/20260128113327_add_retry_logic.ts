@@ -10,7 +10,7 @@ export async function up(knex: Knex): Promise<void> {
   );
   await knex.raw(`ALTER TABLE tasks ADD COLUMN error_message TEXT;`);
 
-  await knex.raw(`ALTER TYPE t_status ADD VALUE 'failed';`);
+  await knex.raw(`ALTER TYPE t_status ADD VALUE IF NOT EXISTS 'failed';`);
 }
 
 export async function down(knex: Knex): Promise<void> {
@@ -18,6 +18,6 @@ export async function down(knex: Knex): Promise<void> {
   await knex.raw(`ALTER TABLE tasks DROP COLUMN max_attempts;`);
   await knex.raw(`ALTER TABLE tasks DROP COLUMN error_message;`);
 
-  // Note: PostgreSQL doesn't support removing values from enums easily
-  // The 'failed' value will remain in t_status enum, only the added columns are rolled back
+  // Note: PostgreSQL does not support simply removing values from enums.
+  // The 'failed' value will remain in t_status; only the added columns are rolled back.
 }
