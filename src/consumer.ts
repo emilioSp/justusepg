@@ -42,7 +42,7 @@ while (true) {
         .where({ id: task.id });
 
       console.log(
-        `❌ Task failed permanently after ${newRetryCount} attempts:`,
+        `❌ Task failed permanently (${newRetryCount} failures):`,
         task.id,
       );
     } else {
@@ -56,7 +56,7 @@ while (true) {
         .where({ id: task.id });
 
       console.log(
-        `🔄 Task failed, attempt ${newRetryCount}/${task.max_attempts}:`,
+        `🔄 Task failed (failure ${newRetryCount}/${task.max_attempts}):`,
         task.id,
       );
     }
