@@ -19,5 +19,5 @@ export async function down(knex: Knex): Promise<void> {
   await knex.raw(`ALTER TABLE tasks DROP COLUMN error_message;`);
 
   // Note: PostgreSQL doesn't support removing values from enums easily
-  // The 'failed' value will remain in t_status enum
+  // The 'failed' value will remain in t_status enum, only the added columns are rolled back
 }
