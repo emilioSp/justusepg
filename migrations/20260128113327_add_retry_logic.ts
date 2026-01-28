@@ -1,0 +1,23 @@
+import type { Knex } from 'knex';
+
+export async function up(knex: Knex): Promise<void> {
+  // Add retry columns
+  await knex.raw(
+    `ALTER TABLE tasks ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0;`,
+  );
+  await knex.raw(
+    `ALTER TABLE tasks ADD COLUMN max_retries INTEGER NOT NULL DEFAULT 3;`,
+  );
+  await knex.raw(`ALTER TABLE tasks ADD COLUMN error_message TEXT;`);
+
+  await knex.raw(`ALTER TYPE t_status ADD VALUE 'failed';`);
+}
+
+export async function down(knex: Knex): Promise<void> {
+  await knex.raw(`ALTER TABLE tasks DROP COLUMN retry_count;`);
+  await knex.raw(`ALTER TABLE tasks DROP COLUMN max_retries;`);
+  await knex.raw(`ALTER TABLE tasks DROP COLUMN error_message;`);
+
+  await knex.raw(`ALTER TYPE t_status REMOVE VALUE 'failed';`);
+  // Note: PostgreSQL doesn't support removing values from enums easily
+}

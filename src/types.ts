@@ -3,9 +3,13 @@ export type Payload = {
 };
 
 export type Task = {
-  id: number;
+  id: string;
   payload: Payload;
-  status: 'pending' | 'in_progress' | 'done';
+  status: 'pending' | 'in_progress' | 'done' | 'failed';
+  retry_count: number;
+  max_retries: number;
+  error_message: string | null;
   created_at: string;
-  updated_at: string;
+  picked_at: string | null;
+  executed_at: string | null;
 };
