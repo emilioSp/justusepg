@@ -30,8 +30,8 @@ while (true) {
   } catch (error) {
     const newRetryCount = task.retry_count + 1;
 
-    if (newRetryCount >= task.max_retries) {
-      // Max retries exceeded, mark as failed
+    if (newRetryCount >= task.max_attempts) {
+      // Max attempts exceeded, mark as failed
       await db('tasks')
         .update({
           status: 'failed',
@@ -42,7 +42,7 @@ while (true) {
         .where({ id: task.id });
 
       console.log(
-        `❌ Task failed permanently after ${newRetryCount} retries:`,
+        `❌ Task failed permanently after ${newRetryCount} attempts:`,
         task.id,
       );
     } else {
@@ -56,7 +56,7 @@ while (true) {
         .where({ id: task.id });
 
       console.log(
-        `🔄 Task failed, retry ${newRetryCount}/${task.max_retries}:`,
+        `🔄 Task failed, attempt ${newRetryCount}/${task.max_attempts}:`,
         task.id,
       );
     }
