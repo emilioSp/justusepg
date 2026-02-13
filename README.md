@@ -6,6 +6,9 @@ This project demonstrates how ridiculously simple it is to build a **production-
 
 No Redis, no RabbitMQ, no SQS—just Postgres.
 
+![infographic.png](infographic.png)
+
+
 ![Descrizione](./justusepg.gif)
 
 ## Why did I write this?
