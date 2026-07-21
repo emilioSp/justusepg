@@ -50,6 +50,28 @@ Continuously adds tasks to the queue.
 ### 3. Consumers (Process Tasks)
 Workers that process tasks in parallel—all safely thanks to PostgreSQL's locking mechanism.
 
+## Retry Logic as supported by queue systems
+
+Tasks that fail aren't lost. They're automatically retried, again just using plain Postgres columns.
+
+```sql
+ALTER TABLE tasks ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE tasks ADD COLUMN max_attempts INTEGER NOT NULL DEFAULT 3;
+ALTER TABLE tasks ADD COLUMN error_message TEXT;
+```
+
+When a worker fails to process a task:
+- If `retry_count` is still below `max_attempts`, the task is put back to `pending` (so another worker can pick it up), `retry_count` is incremented, and `error_message` is recorded.
+- Once `retry_count` reaches `max_attempts`, the task is marked `failed` for good, keeping the last `error_message` for debugging.
+
+```ts
+if (newRetryCount >= task.max_attempts) {
+  // give up: status = 'failed'
+} else {
+  // try again: status = 'pending', picked_at = null
+}
+```
+
 ## Quick Start
 
 ```bash
