@@ -100,13 +100,39 @@ You don't always need specialized queue infrastructure. PostgreSQL is:
 
 and hey, you don't need to consume a "message" to see its payload! :D (just query the `tasks` table directly!)
 
-## When NOT to Use This
+## When to Use This Approach
 
-- You need **millions** of messages per second
-- You need **pub/sub** patterns across many many...many services
-- You need **delayed/scheduled** jobs at scale
+- **Transactional enqueueing with application data**
+  - Write business data and enqueue the task in the same transaction. Both operations commit or roll back together.
+  - This avoids partial failures when writing to a database and publishing to RabbitMQ as two separate operations.
 
-But for **80% of use cases**? Just use Postgres.
+- **Simplicity**
+  - Reuse a database already present in your architecture.
+  - Keep the codebase small without adding a queue service or client dependency.
+  - Producer and consumer logic stays simple to read and maintain.
+
+- **Debugging**
+  - Inspect task payloads with a `SELECT`, without consuming a message.
+  - Requeue a task by updating its status to `pending`, resetting retry metadata as needed.
+  - Keeping the original `created_at` places it ahead of newer pending tasks when workers select the next available task.
+  - Inspect workloads, aggregate results, and investigate failures using SQL.
+
+- **Useful results at low cost**
+  - For asynchronous jobs, email delivery, and background processing at moderate volumes, your existing database may be all you need.
+
+## When Not to Use This Approach
+
+- **Queue load exceeds the database's available capacity**
+  - Throughput depends on transaction duration, locking, indexes, storage, and application load. Benchmark your workload rather than relying on a fixed messages-per-second limit.
+  - A queue in the production database competes with application queries for resources. Consider a dedicated queue system when that competition becomes a bottleneck.
+
+- **You need advanced messaging features**
+  - This implementation assigns each task to one worker. It does not support publish/subscribe delivery to multiple independent consumers.
+  - If you need those features, consider an existing messaging system before building them yourself.
+
+- **You need scheduling or delayed execution**
+  - This implementation does not support scheduled or delayed jobs.
+  - PostgreSQL can support those features, but they require additional logic. If they are central to your requirements, consider an existing job queue or scheduler.
 
 ## Tech Stack
 
